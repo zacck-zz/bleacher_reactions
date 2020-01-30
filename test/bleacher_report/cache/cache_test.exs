@@ -55,7 +55,49 @@ defmodule BreacherReport.CacheTest do
 
       {:ok, _} = Cache.put(content_id, reaction)
 
-      assert [%{user_id: ^other_add_user_id, content_id: ^content_id}] = Cache.get(content_id)
+      assert {:ok, [%{user_id: ^other_add_user_id, content_id: ^content_id}]} = Cache.get(content_id)
+    end
+
+
+    test ".remove/1 removed a reaction if it exists" do
+      content_id = "some_remove_content_id"
+      remove_user_id  = "some_remove_user_id"
+
+      retained_user_id = "some_remained_user_id"
+
+      reaction = %{
+        type: :reaction,
+        action: :add,
+        content_id: content_id,
+        user_id: remove_user_id,
+        reaction_type: :fire
+      }
+
+      reaction1 = %{
+        type: :reaction,
+        action: :add,
+        content_id: content_id,
+        user_id: retained_user_id,
+        reaction_type: :fire
+      }
+
+      {:ok, _} = Cache.put(content_id, reaction)
+      {:ok, _} = Cache.put(content_id, reaction1)
+
+
+
+      {:ok, items} = Cache.get(content_id)
+
+      # we put two reactions in
+       assert Enum.count(items) == 2
+
+      {:ok, {^content_id, left_reactions}} = Cache.remove(reaction)
+
+      {:ok, lefts} = Cache.get(content_id)
+
+      assert Enum.count(lefts) == Enum.count(left_reactions)
+
+      assert Enum.count(lefts) == 1
     end
   end
 end
