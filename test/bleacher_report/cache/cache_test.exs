@@ -42,9 +42,20 @@ defmodule BreacherReport.CacheTest do
     end
 
     test "get returns the value in the key" do
-      {:ok, _} = Cache.put(:session_id, @id)
+      content_id = "some_get_content_id"
+      other_add_user_id = "some_other_add_user_id"
 
-      assert @id = Cache.get(:session_id)
+      reaction = %{
+        type: :reaction,
+        action: :add,
+        content_id: content_id,
+        user_id: other_add_user_id,
+        reaction_type: :fire
+      }
+
+      {:ok, _} = Cache.put(content_id, reaction)
+
+      assert [%{user_id: ^other_add_user_id, content_id: ^content_id}] = Cache.get(content_id)
     end
   end
 end
