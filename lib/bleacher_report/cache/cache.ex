@@ -54,7 +54,7 @@ defmodule BleacherReport.Cache do
   containing both a user uuid and a content's uuid, later it makes sense to make this a struct when provied to the API
   """
   @spec remove(%{required(:content_id) => String.t(), required(:user_id) => String.t()}) :: {:ok, tuple()} | {:error, term()}
-  def remove(%{content_id: c_id, user_id: u_id} = reaction) do
+  def remove(%{content_id: c_id, user_id: u_id}) do
     GenServer.call(@name, {:remove, {c_id, u_id}})
   end
 
@@ -87,19 +87,13 @@ defmodule BleacherReport.Cache do
   It's probably best to  make this implementation use a MapSet as that may completely avoid the issue of having duplicates
   """
   @spec handle_call(tuple(), pid(), map()) :: {:ok, term()} | {:error, term()}
-  def handle_call({:put, {key, value}}, _from, %{cache_table: table} = state) do
+  def handle_call({:put, {key, value}}, _from, state) do
     result =
-      with vals <- get(key),
-           new_items <- [ value | vals ],
-           true <- :ets.insert(table, {key, new_items}) do
-             {:ok, {value.content_id, value}}
+      with nil <- get(key) do
+        insert_item(key, value, [])
       else
-        # item with content id does not exist
-        nil ->
-          case :ets.insert(table, {key, [value]}) do
-            true -> {:ok, {value.content_id, value}}
-            err -> {:error, err}
-          end
+        vals ->
+          insert_item(key, value, vals)
 
         err -> {:error, err}
      end
@@ -112,5 +106,13 @@ defmodule BleacherReport.Cache do
     result = :ets.delete(table, key)
 
     {:reply, {:ok, result}, state}
+  end
+
+  @doc false
+  defp insert_item(key, new_item, items) do
+    case :ets.insert(@cache_table, {key, [new_item | items]}) do
+      true -> {:ok, {new_item.content_id, new_item}}
+      err -> {:error, err}
+    end
   end
 end
