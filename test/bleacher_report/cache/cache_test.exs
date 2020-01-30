@@ -1,4 +1,4 @@
-defmodule Integrations.CacheTest do
+defmodule BreacherReport.CacheTest do
   @moduledoc """
   This modules holds unit tests for the functionalities provided by the Cache Module in Kachuma
   """
@@ -18,14 +18,27 @@ defmodule Integrations.CacheTest do
     :ok = Application.start(:bleacher_report)
   end
 
+
   describe "Cache" do
     test "get returns nil if an item isn't saved in the cache" do
-      nil = Cache.get(:session_id)
+      nil = Cache.get("some_non_existent_id")
     end
 
-    @id "osdjkewnfiwnd"
     test "put stores the expected value when a value is passed in" do
-      assert {:ok, {:session_id, @id}} = Cache.put(:session_id, @id)
+      content_id = "some_content_id"
+      add_user_id = "some_add_id"
+
+      reaction = %{
+        type: :reaction,
+        action: :add,
+        content_id: content_id,
+        user_id: add_user_id,
+        reaction_type: :fire
+      }
+
+
+
+      assert {:ok, {^content_id, %{user_id: ^add_user_id}}} = Cache.put(:session_id, reaction)
     end
 
     test "get returns the value in the key" do
