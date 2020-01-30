@@ -21,10 +21,10 @@ defmodule BreacherReport.CacheTest do
 
   describe "Cache" do
     test "get returns nil if an item isn't saved in the cache" do
-      nil = Cache.get("some_non_existent_id")
+      {:error, nil} = Cache.get("some_non_existent_id")
     end
 
-    test "put stores the expected value when a value is passed in" do
+    test ".put/2 stores the expected value when a value is passed in" do
       content_id = "some_content_id"
       add_user_id = "some_add_id"
 
@@ -38,10 +38,10 @@ defmodule BreacherReport.CacheTest do
 
 
 
-      assert {:ok, {^content_id, %{user_id: ^add_user_id}}} = Cache.put(:session_id, reaction)
+      assert {:ok, {^content_id, [%{user_id: ^add_user_id}]}} = Cache.put(content_id, reaction)
     end
 
-    test "get returns the value in the key" do
+    test ".get/1 returns the value in the key" do
       content_id = "some_get_content_id"
       other_add_user_id = "some_other_add_user_id"
 
