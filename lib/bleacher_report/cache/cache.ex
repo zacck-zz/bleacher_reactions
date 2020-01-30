@@ -53,11 +53,11 @@ defmodule BleacherReport.Cache do
   * `reaction` - A reaction that is to be removed from the content, note this needs to be a valid reaction structure
   containing both a user uuid and a content's uuid, later it makes sense to make this a struct when provied to the API
   """
-  @spec remove(%{required(:content_id) => String.t(), required(:user_id) => String.t()}) :: {:ok, tuple()} | {:error, term()}
+  @spec remove(%{required(:content_id) => String.t(), required(:user_id) => String.t()}) ::
+          {:ok, tuple()} | {:error, term()}
   def remove(%{content_id: c_id, user_id: u_id}) do
     GenServer.call(@name, {:remove, {c_id, u_id}})
   end
-
 
   @doc false
   def delete(key) do
@@ -95,12 +95,12 @@ defmodule BleacherReport.Cache do
         vals ->
           insert_item(key, value, vals)
 
-        err -> {:error, err}
-     end
+        err ->
+          {:error, err}
+      end
 
     {:reply, result, state}
   end
-
 
   def handle_call({:delete, {table, key}}, _from, state) do
     result = :ets.delete(table, key)
