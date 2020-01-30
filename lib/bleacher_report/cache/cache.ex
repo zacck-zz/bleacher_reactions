@@ -38,11 +38,11 @@ defmodule BleacherReport.Cache do
   @doc """
   This function collects the term stored with under the key if none is found it will return nil.
   """
-  @spec get(atom()) :: term() | nil
+  @spec get(atom()) :: {:ok, term()} | {:error, nil}
   def get(key) do
     case :ets.lookup(@cache_table, key) do
-      [{^key, value}] -> value
-      [] -> nil
+      [{^key, value}] -> {:ok, value}
+      [] -> {:error, nil}
     end
   end
 
@@ -56,7 +56,14 @@ defmodule BleacherReport.Cache do
   @spec remove(%{required(:content_id) => String.t(), required(:user_id) => String.t()}) ::
           {:ok, tuple()} | {:error, term()}
   def remove(%{content_id: c_id, user_id: u_id}) do
-    GenServer.call(@name, {:remove, {c_id, u_id}})
+    with {:ok, {^c_id, items}} <- GenServer.call(@name, {:remove, {c_id, u_id}}) do
+
+      {:ok, {c_id, items}}
+    else
+
+      err ->
+        err
+    end
   end
 
   @doc false
@@ -74,7 +81,7 @@ defmodule BleacherReport.Cache do
   @spec init(term()) :: {:ok, term()}
   def init(_) do
     state = %{
-      cache_table: :ets.new(@cache_table, [:named_table])
+      cache_table: :ets.new(@cache_table, [:protected, :set, :named_table, read_concurrency: true])
     }
 
     {:ok, state}
@@ -86,14 +93,14 @@ defmodule BleacherReport.Cache do
   reaction and if it does exist it will add the reaction the list of reactions
   It's probably best to  make this implementation use a MapSet as that may completely avoid the issue of having duplicates
   """
-  @spec handle_call(tuple(), pid(), map()) :: {:ok, term()} | {:error, term()}
+  @spec handle_call(tuple(), pid(), map()) :: {:ok, tuple()} | {:error, term()}
   def handle_call({:put, {key, value}}, _from, state) do
     result =
-      with nil <- get(key) do
-        insert_item(key, value, [])
+      with {:error, nil} <- get(key) do
+        insert_item(key, [value])
       else
-        vals ->
-          insert_item(key, value, vals)
+        {:ok, vals} ->
+          insert_item(key, [ value | vals ])
 
         err ->
           {:error, err}
@@ -102,6 +109,39 @@ defmodule BleacherReport.Cache do
     {:reply, result, state}
   end
 
+ @doc """
+  Callback to handle a client request to update some data in the cache by removing a
+  valule. This function will first check whether an item exists before trying to delete
+  an item in the list of reactions for the item.
+  MapSet also makes his faster as it should be a constant time operation rather than
+  being a function with a linear complexity
+  """
+  @spec handle_call(tuple(), pid(), map()) :: {:ok, tuple()} | {:error, term()}
+  def handle_call({:remove, {key, value}}, _from, state) do
+    result =
+      with {:ok, items} <- get(key) do
+        remaining =
+          items
+          |> Enum.filter(fn(%{user_id: id}) -> id != value end)
+
+
+        true = :ets.delete(@cache_table, key)
+        true = :ets.insert(@cache_table, {key, remaining})
+
+        {:ok, {key, remaining}}
+
+      else
+        {:error, nil} ->
+          {:error, "cannon remove a reaction that does not exist"}
+      end
+
+
+
+    {:reply, result, state}
+  end
+
+  @doc false
+  @spec handle_call({:delete, {String.t(), String.t()}}, pid, map()) :: {:ok, tuple()} | {:error, term()}
   def handle_call({:delete, {table, key}}, _from, state) do
     result = :ets.delete(table, key)
 
@@ -109,9 +149,10 @@ defmodule BleacherReport.Cache do
   end
 
   @doc false
-  defp insert_item(key, new_item, items) do
-    case :ets.insert(@cache_table, {key, [new_item | items]}) do
-      true -> {:ok, {new_item.content_id, new_item}}
+  @spec insert_item(String.t(), map()) :: {:ok, tuple()} | {:error, term()}
+  defp insert_item(key, items) do
+    case :ets.insert(@cache_table, {key, items}) do
+      true -> {:ok, {key, items}}
       err -> {:error, err}
     end
   end
