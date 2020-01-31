@@ -29,7 +29,7 @@ defmodule BleacherReportWeb.ReactionControllerTest do
         conn
         |> post(reaction_path(conn, :react, reaction))
 
-      assert json_response(conn, 201)
+      assert json_response(conn, 201) == %{"content_id" => reaction["user_id"]}
     end
 
     test "reaction_counts/2 should fetch reaction counts for a content_id" do
