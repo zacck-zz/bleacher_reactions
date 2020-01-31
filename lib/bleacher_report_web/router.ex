@@ -9,5 +9,7 @@ defmodule BleacherReportWeb.Router do
     pipe_through :api
 
     get "/", ReactionController, :index
+
+    post "/react", ReactionController, :react
   end
 end
