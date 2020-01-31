@@ -109,7 +109,7 @@ defmodule BleacherReport.Cache do
     {:reply, result, state}
   end
 
- @doc """
+  @doc """
   Callback to handle a client request to update some data in the cache by removing a
   valule. This function will first check whether an item exists before trying to delete
   an item in the list of reactions for the item.
@@ -125,6 +125,8 @@ defmodule BleacherReport.Cache do
           |> Enum.filter(fn(%{user_id: id}) -> id != value end)
 
 
+        # TODO Learn how to use :ets.update_element
+        # Specifically what is the arity value in the last input tuple?
         true = :ets.delete(@cache_table, key)
         true = :ets.insert(@cache_table, {key, remaining})
 
