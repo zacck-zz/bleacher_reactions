@@ -12,7 +12,6 @@ defmodule BreacherReport.CacheTest do
     Process.sleep(4)
 
     on_exit(fn ->
-      1 + 1
     end)
 
     :ok = Application.start(:bleacher_report)
