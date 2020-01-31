@@ -43,7 +43,18 @@ or to remove an reaction
 2. There is a get endpount at [`localhost:4000/api/reaction_counts/:some_id`](http://localhost:4000/api/reaction_counts)
 	This endpoint expect an existing content id and will return a positive count or `error, nil` in the case of non existing counts
 
+## Sample Requests
 
+```bash
+$ curl --request POST -H 'Content-Type: application/json' --data '{"user_id": "uid", "content_id": "cid", "type": "reaction", "action": "add", "reaction_type": "fire"}' http://localhost:4000/api/react/
+{"user_id":"uid","content_id":"cid"}
+
+$ curl --request POST -H 'Content-Type: application/json' --data '{"user_id": "u2id", "content_id": "cid", "type": "reaction", "action": "add", "reaction_type": "fire"}' http://localhost:4000/api/react/
+{"user_id":"u2id","content_id":"cid"}
+
+$ curl http://localhost:4000/api/reaction_counts/cid
+{"reaction_count":{"fire":2},"content_id":"cid"}
+```
 ## Notes
 - This can be greatly improved by making our Cache use structs, this would include making structs of the data at the edges(controllers)
 - While this will be fairly performant up to around 30 - 40k requests a second at such a point we need to start considering using
