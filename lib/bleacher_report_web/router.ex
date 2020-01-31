@@ -11,5 +11,7 @@ defmodule BleacherReportWeb.Router do
     get "/", ReactionController, :index
 
     post "/react", ReactionController, :react
+
+    get "/reaction_counts/:content_id", ReactionController, :count
   end
 end

@@ -26,14 +26,45 @@ defmodule BleacherReportWeb.ReactionController do
   def react(conn, %{"content_id" =>  key, "user_id" => uid, "action" => "add"} = value) do
     with {:ok, {^key, [_ | _]}} <- Cache.put(key, value) do
       conn
-      |> put_resp_content_type("text/json")
       |> put_status(201)
-      |> json(%{"content_id" => uid})
+      |> json(%{"content_id" => key, "user_id" => uid})
     else
       err ->
         conn
-        |> put_resp_content_type("text/json")
-        |> send_resp(400, err)
+        |> put_status(400)
+        |> json(err)
+    end
+  end
+
+  def react(conn, %{"content_id" => key, "user_id" => uid, "action" => "remove"} = value) do
+    with {:ok, {^key, [_|_]}} <- Cache.remove(value) do
+      conn
+      |> put_status(202)
+      |> json(%{"content_id" => key, "user_id" => uid})
+    else
+      err ->
+        conn
+        |> put_status(400)
+        |> json(err)
+    end
+  end
+
+
+  @doc """
+  Reaction action to handle requesting of reaction counts for a content_id
+  """
+  @spec count(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def count(conn, %{"content_id" => key}) do
+    with {:ok, items} <- Cache.get(key) do
+      conn
+      |> put_status(200)
+      |> json(%{"content_id" => key, "reaction_count" => %{"fire" => Enum.count(items)}})
+
+    else
+      err ->
+        conn
+        |> put_status(400)
+        |> json(err)
     end
   end
 
