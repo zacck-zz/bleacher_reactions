@@ -53,9 +53,8 @@ defmodule BleacherReport.Cache do
   * `reaction` - A reaction that is to be removed from the content, note this needs to be a valid reaction structure
   containing both a user uuid and a content's uuid, later it makes sense to make this a struct when provied to the API
   """
-  @spec remove(%{required(:content_id) => String.t(), required(:user_id) => String.t()}) ::
-          {:ok, tuple()} | {:error, term()}
-  def remove(%{content_id: c_id, user_id: u_id}) do
+  @spec remove(map()) :: {:ok, tuple()} | {:error, term()}
+  def remove(%{"content_id" => c_id, "user_id" => u_id}) do
     with {:ok, {^c_id, items}} <- GenServer.call(@name, {:remove, {c_id, u_id}}) do
 
       {:ok, {c_id, items}}
@@ -122,7 +121,7 @@ defmodule BleacherReport.Cache do
       with {:ok, items} <- get(key) do
         remaining =
           items
-          |> Enum.filter(fn(%{user_id: id}) -> id != value end)
+          |> Enum.filter(fn(%{"user_id" => id}) -> id != value end)
 
 
         # TODO Learn how to use :ets.update_element

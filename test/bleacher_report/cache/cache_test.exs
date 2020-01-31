@@ -11,8 +11,6 @@ defmodule BreacherReport.CacheTest do
     Application.stop(:bleacher_report)
     Process.sleep(4)
 
-    on_exit(fn ->
-    end)
 
     :ok = Application.start(:bleacher_report)
   end
@@ -28,16 +26,16 @@ defmodule BreacherReport.CacheTest do
       add_user_id = "some_add_id"
 
       reaction = %{
-        type: :reaction,
-        action: :add,
-        content_id: content_id,
-        user_id: add_user_id,
-        reaction_type: :fire
+        "type" => "reaction",
+        "action" => "add",
+        "content_id" => content_id,
+        "user_id" => add_user_id,
+        "reaction_type" => "fire"
       }
 
 
 
-      assert {:ok, {^content_id, [%{user_id: ^add_user_id}]}} = Cache.put(content_id, reaction)
+      assert {:ok, {^content_id, [%{"user_id" => ^add_user_id}]}} = Cache.put(content_id, reaction)
     end
 
     test ".get/1 returns the value in the key" do
@@ -45,16 +43,16 @@ defmodule BreacherReport.CacheTest do
       other_add_user_id = "some_other_add_user_id"
 
       reaction = %{
-        type: :reaction,
-        action: :add,
-        content_id: content_id,
-        user_id: other_add_user_id,
-        reaction_type: :fire
+        "type" => "reaction",
+        "action" => "add",
+        "content_id" => content_id,
+        "user_id" => other_add_user_id,
+        "reaction_type" => "fire"
       }
 
       {:ok, _} = Cache.put(content_id, reaction)
 
-      assert {:ok, [%{user_id: ^other_add_user_id, content_id: ^content_id}]} = Cache.get(content_id)
+      assert {:ok, [%{"user_id" => ^other_add_user_id, "content_id" => ^content_id}]} = Cache.get(content_id)
     end
 
 
@@ -65,19 +63,19 @@ defmodule BreacherReport.CacheTest do
       retained_user_id = "some_remained_user_id"
 
       reaction = %{
-        type: :reaction,
-        action: :add,
-        content_id: content_id,
-        user_id: remove_user_id,
-        reaction_type: :fire
+        "type" => "reaction",
+        "action" =>"add",
+        "content_id" => content_id,
+        "user_id" => remove_user_id,
+        "reaction_type" => "fire"
       }
 
       reaction1 = %{
-        type: :reaction,
-        action: :add,
-        content_id: content_id,
-        user_id: retained_user_id,
-        reaction_type: :fire
+        "type" => "reaction",
+        "action" => "add",
+        "content_id" => content_id,
+        "user_id" => retained_user_id,
+        "reaction_type" => "fire"
       }
 
       {:ok, _} = Cache.put(content_id, reaction)
