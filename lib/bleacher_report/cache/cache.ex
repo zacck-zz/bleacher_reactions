@@ -25,12 +25,12 @@ defmodule BleacherReport.Cache do
   end
 
   @doc """
-  This function accepts a term and a key to use when storing that term the key is expected to be of an atom type
+  This function accepts a term and a key to use when storing that term the key is expected to be of an string type
   Parameters
-  * `key` - atom value to use as key for the term to be stored
+  * `key` - string value to use as key for the term to be stored
   * `term` - an elixir term to store under the key in the Cache
   """
-  @spec put(atom(), term()) :: {:ok, tuple()} | {:error, term()}
+  @spec put(String.t(), term()) :: {:ok, tuple()} | {:error, term()}
   def put(key, value) do
     GenServer.call(@name, {:put, {key, value}})
   end
@@ -38,7 +38,7 @@ defmodule BleacherReport.Cache do
   @doc """
   This function collects the term stored with under the key if none is found it will return nil.
   """
-  @spec get(atom()) :: {:ok, term()} | {:error, nil}
+  @spec get(String.t()) :: {:ok, term()} | {:error, nil}
   def get(key) do
     case :ets.lookup(@cache_table, key) do
       [{^key, value}] -> {:ok, value}
